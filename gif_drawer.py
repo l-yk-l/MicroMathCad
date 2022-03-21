@@ -30,7 +30,6 @@ def __update(n, x, y, line):
 def __update_all(n, *args):
     for i in range(0, len(args), 3):
         __update(n, args[i], args[i+1], args[i+2])
-    # mdl.set_progress(n)
 
 
 def draw_history(objects, x_lim=(-2, 102), y_lim=(-2, 102)):
