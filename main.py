@@ -17,19 +17,20 @@ plt.xlim([-0.6, 10.6])
 plt.ylim([-1.2, 1.2])
 
 # Charts initialization
-sin1 = function.Sinusoid(plt, ax)
+# sin1 = function.Sinusoid(plt, ax)
 # sin1.set_color('blue')
 
-sin2 = function.Sinusoid(plt, ax, -1.0)
+# sin2 = function.Sinusoid(plt, ax, -1.0)
 # sin2.set_color('red')
 
-sin3 = function.Sinusoid(plt, ax, 0.1)
+# sin3 = function.Sinusoid(plt, ax, 0.1)
 # sin3.set_color('purple')
 
-sin4 = function.Sinusoid(plt, ax, -0.1)
+# sin4 = function.Sinusoid(plt, ax, -0.1)
 # sin4.set_color('#7FFFD4')
 
-objects = [sin1, sin2, sin3, sin4]
+# objects = [sin1, sin2, sin3, sin4]
+objects = [function.Victim(plt, ax, 0, 0, -30, 0.5), function.Hunter(plt, ax, 0, 0, 30, 1)]
 
 
 # Functions
@@ -67,20 +68,20 @@ def stop_save():
     # Визуализация прогресса сохранения гифки (очень тормозит процесс сохранения)
     # drawer = gif_drawer2.Modal(root)
     # drawer.draw_history(objects=objects, x_lim=[-0.6, 10.6], y_lim=[-1.2, 1.2])
-    top = tk.Toplevel(root)
-    top.geometry('250x100')
-    top.attributes('-disabled', True)
-    top.focus_set()
-    top.transient(root)
-    top.grab_set()
-
-    top_label = tk.Label(top, text="Пожалуйста, подождите", font=('Arial Bold', font_size))
-    top_label.place(relx=.5, rely=.5, anchor="center", height=30, width=200, bordermode=tk.OUTSIDE)
-    top.update()
+    # top = tk.Toplevel(root)
+    # top.geometry('250x100')
+    # top.attributes('-disabled', True)
+    # top.focus_set()
+    # top.transient(root)
+    # top.grab_set()
+    #
+    # top_label = tk.Label(top, text="Пожалуйста, подождите", font=('Arial Bold', font_size))
+    # top_label.place(relx=.5, rely=.5, anchor="center", height=30, width=200, bordermode=tk.OUTSIDE)
+    # top.update()
 
     gif_drawer.draw_history(objects=objects, x_lim=[-0.6, 10.6], y_lim=[-1.2, 1.2])
 
-    top.destroy()
+    # top.destroy()
 
 
 root = tk.Tk()
@@ -106,8 +107,8 @@ btnSub = tk.Button(
 )
 btnSub.grid(column=5, row=18)
 
-labelK = tk.Label(root, text=f"k = {objects[0].k}", font=('Arial Bold', font_size))
-labelK.grid(column=5, row=16)
+# labelK = tk.Label(root, text=f"k = {objects[0].k}", font=('Arial Bold', font_size))
+# labelK.grid(column=5, row=16)
 
 btnAdd = tk.Button(
     root,
