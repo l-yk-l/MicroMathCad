@@ -56,24 +56,24 @@ class Victim(object):
     def __init__(self, plt, ax, start_x, start_y, direction, speed, max_angle_of_rotation, n_points=500):
         self.n_points = n_points
         self.e = 10 / n_points
-        npx = np.array([start_x])
-        npy = np.array([start_y])
         self.direction = direction
         self.speed = speed
         self.max_angle_of_rotation = max_angle_of_rotation
+        npx = np.array([start_x-0.1, start_x])
+        npy = np.array([start_y-0.1, start_y])
         self.x = deque(npx, maxlen=n_points)
         self.y = deque(npy, maxlen=n_points)
-        self.x_history = [self.x[0]]
-        self.y_history = [self.y[0]]
+        self.x_history = [self.x[0], self.x[1]]
+        self.y_history = [self.y[0], self.y[1]]
         self.hunters = []
         self.isPaused = True
         self.ax = ax
         self.plt = plt
         [self.line] = self.ax.step(self.x, self.y)
         self.color = None
-        # Лимиты следует подобрать позже по стартовой точке
-        self.plt.xlim([-10, 10])
-        self.plt.ylim([-10, 10])
+
+        self.plt.xlim([self.x[-1]-10, self.x[-1]+10])
+        self.plt.ylim([self.y[-1]-10, self.y[-1]+10])
 
     def update(self, dy):
         # A(x1, y1)
@@ -81,11 +81,44 @@ class Victim(object):
         # d - расстояние
         # B = (x1 + d*cos(a), y1 + d*sin(a))
         if not self.isPaused:
-            for i in range(math.floor(self.speed * 10)):
+            # Расчет угла поворота
+            if len(self.hunters):
+                min_rotation = 181
+                current_hunter_x = None
+                current_hunter_y = None
+                for hunter in self.hunters:
+                    s_x = hunter.x[-1] - self.x[-1]
+                    s_y = hunter.y[-1] - self.y[-1]
+                    sin_fi = np.cos(np.radians(self.direction))
+                    cos_fi = np.sin(np.radians(self.direction))
+                    local_hunter_x = s_x * sin_fi + s_y * cos_fi
+                    local_hunter_y = -s_x * cos_fi + s_y * sin_fi
+                    if current_hunter_x is None:
+                        current_hunter_x = local_hunter_x
+                    if current_hunter_y is None:
+                        current_hunter_y = local_hunter_y
+                    # print(f"x = {local_hunter_x}; y = {local_hunter_y}")
+                    angle_from_hunter = 0
+                    if local_hunter_x:
+                        angle_from_hunter = np.degrees(np.arctan(local_hunter_y / local_hunter_x))
+                    else:
+                        angle_from_hunter = np.sign(local_hunter_y) * 90.0
+
+                    if abs(angle_from_hunter) < min_rotation:
+                        min_rotation = angle_from_hunter
+                        current_hunter_x = local_hunter_x
+                        current_hunter_y = local_hunter_y
+                # print(min_rotation)
+                if current_hunter_y < 0:
+                    self.direction += min(self.max_angle_of_rotation, abs(min_rotation))
+                else:
+                    self.direction -= min(self.max_angle_of_rotation, abs(min_rotation))
+
+            for i in range(10):
                 last_x = self.x[-1]
                 last_y = self.y[-1]
-                self.x.append(last_x + 0.1 * np.cos(np.radians(self.direction)))
-                self.y.append(last_y + 0.1 * np.sin(np.radians(self.direction)))
+                self.x.append(last_x + (self.speed/10) * np.cos(np.radians(self.direction)))
+                self.y.append(last_y + (self.speed/10) * np.sin(np.radians(self.direction)))
                 self.x_history.append(self.x[-1])
                 self.y_history.append(self.y[-1])
 
@@ -93,16 +126,25 @@ class Victim(object):
             self.line.set_ydata(self.y)
 
             # лимиты осей (с какой по какую точку оси отображать плот)
-            # if last < 10:
-            #     self.plt.xlim([-0.6, 10.6])
-            # else:
-            #     self.plt.xlim([last - 10.6, last + 0.6])
-            # self.plt.ylim([-1.2, 1.2])
+            self.set_plt_lims()
             self.ax.autoscale_view(True, True, True)
 
             time.sleep(0.05)
 
             return self.line, self.ax
+
+    def set_plt_lims(self):
+        min_x_lim = min(self.x)
+        min_y_lim = min(self.y)
+        max_x_lim = max(self.x)
+        max_y_lim = max(self.y)
+        for hunter in self.hunters:
+            min_x_lim = min(min_x_lim, min(hunter.x))
+            min_y_lim = min(min_y_lim, min(hunter.y))
+            max_x_lim = max(max_x_lim, max(hunter.x))
+            max_y_lim = max(max_y_lim, max(hunter.y))
+        self.plt.xlim([min_x_lim-10, max_x_lim+10])
+        self.plt.ylim([min_y_lim - 10, max_y_lim + 10])
 
     def data_gen(self):
         while True:
@@ -120,50 +162,59 @@ class Hunter(object):
     def __init__(self, plt, ax, start_x, start_y, direction, speed, max_angle_of_rotation, n_points=500):
         self.n_points = n_points
         self.e = 10 / n_points
-        npx = np.array([start_x])
-        npy = np.array([start_y])
         self.direction = direction
         self.speed = speed
         self.max_angle_of_rotation = max_angle_of_rotation
+        npx = np.array([start_x-0.1, start_x])
+        npy = np.array([start_y-0.1, start_y])
         self.x = deque(npx, maxlen=n_points)
         self.y = deque(npy, maxlen=n_points)
-        self.x_history = [self.x[0]]
-        self.y_history = [self.y[0]]
+        self.x_history = [self.x[0], self.x[1]]
+        self.y_history = [self.y[0], self.y[1]]
         self.victim = None
         self.isPaused = True
         self.ax = ax
         self.plt = plt
         [self.line] = self.ax.step(self.x, self.y)
         self.color = None
-        # Лимиты следует подобрать позже по стартовой точке
-        self.plt.xlim([-10, 10])
-        self.plt.ylim([-10, 10])
 
     def update(self, dy):
         # A(x1, y1)
         # a - угол в градусах
         # d - расстояние
         # B = (x1 + d*cos(a), y1 + d*sin(a))
-        last_x = self.x[-1]
-        last_y = self.y[-1]
         if not self.isPaused:
-            for i in range(math.floor(self.speed * 10)):
+            # Расчет угла поворота
+            if self.victim:
+                s_x = self.victim.x[-1] - self.x[-1]
+                s_y = self.victim.y[-1] - self.y[-1]
+                sin_fi = np.cos(np.radians(self.direction))
+                cos_fi = np.sin(np.radians(self.direction))
+                local_victim_x = s_x * sin_fi + s_y * cos_fi
+                local_victim_y = -s_x * cos_fi + s_y * sin_fi
+                # print(f"x = {local_victim_x}; y = {local_victim_y}")
+                angle_to_victim = 0
+                if local_victim_x:
+                    angle_to_victim = np.degrees(np.arctan(local_victim_y / local_victim_x))
+                else:
+                    angle_to_victim = np.sign(local_victim_y) * 90.0
+
+                if local_victim_y > 0:
+                    self.direction += min(self.max_angle_of_rotation, abs(angle_to_victim))
+                else:
+                    self.direction -= min(self.max_angle_of_rotation, abs(angle_to_victim))
+
+            for i in range(10):
                 last_x = self.x[-1]
                 last_y = self.y[-1]
-                self.x.append(last_x + 0.1 * np.cos(np.radians(self.direction)))
-                self.y.append(last_y + 0.1 * np.sin(np.radians(self.direction)))
+                self.x.append(last_x + (self.speed/10) * np.cos(np.radians(self.direction)))
+                self.y.append(last_y + (self.speed/10) * np.sin(np.radians(self.direction)))
                 self.x_history.append(self.x[-1])
                 self.y_history.append(self.y[-1])
 
             self.line.set_xdata(self.x)  # update plot data
             self.line.set_ydata(self.y)
 
-            # лимиты осей (с какой по какую точку оси отображать плот)
-            # if last < 10:
-            #     self.plt.xlim([-0.6, 10.6])
-            # else:
-            #     self.plt.xlim([last - 10.6, last + 0.6])
-            # self.plt.ylim([-1.2, 1.2])
             self.ax.autoscale_view(True, True, True)
             return self.line, self.ax
 

@@ -1,5 +1,6 @@
 import function
 import gif_drawer
+from importlib import reload
 # import gif_drawer2
 
 import matplotlib.pyplot as plt
@@ -16,6 +17,8 @@ ax.grid()
 plt.xlim([-0.6, 10.6])
 plt.ylim([-1.2, 1.2])
 
+gifs_counter = 0
+
 # Charts initialization
 # sin1 = function.Sinusoid(plt, ax)
 # sin1.set_color('blue')
@@ -30,7 +33,11 @@ plt.ylim([-1.2, 1.2])
 # sin4.set_color('#7FFFD4')
 
 # objects = [sin1, sin2, sin3, sin4]
-objects = [function.Victim(plt, ax, 0, 0, -30, 0.5), function.Hunter(plt, ax, 0, 0, 30, 1)]
+victim = function.Victim(plt, ax, start_x=0, start_y=0, direction=30, speed=0.5, max_angle_of_rotation=10)
+hunter1 = function.Hunter(plt, ax, start_x=-4, start_y=2, direction=90, speed=0.7, max_angle_of_rotation=10)
+victim.add_hunter(hunter1)
+hunter1.set_victim(victim)
+objects = [victim, hunter1]
 
 
 # Functions
@@ -40,16 +47,16 @@ def on_closing():
     root.quit()
 
 
-def add_k():
-    for obj in objects:
-        obj.k += 0.1
-    labelK.configure(text=f"k = {round(objects[0].k, 1)}")
-
-
-def sub_k():
-    for obj in objects:
-        obj.k -= 0.1
-    labelK.configure(text=f"k = {round(objects[0].k, 1)}")
+# def add_k():
+#     for obj in objects:
+#         obj.k += 0.1
+#     labelK.configure(text=f"k = {round(objects[0].k, 1)}")
+#
+#
+# def sub_k():
+#     for obj in objects:
+#         obj.k -= 0.1
+#     labelK.configure(text=f"k = {round(objects[0].k, 1)}")
 
 
 def start():
@@ -79,8 +86,8 @@ def stop_save():
     # top_label.place(relx=.5, rely=.5, anchor="center", height=30, width=200, bordermode=tk.OUTSIDE)
     # top.update()
 
-    gif_drawer.draw_history(objects=objects, x_lim=[-0.6, 10.6], y_lim=[-1.2, 1.2])
-
+    gif_drawer.draw_history(objects=objects)
+    reload(gif_drawer)
     # top.destroy()
 
 
@@ -98,26 +105,26 @@ canvas.get_tk_widget().grid(column=1, row=1, columnspan=3, rowspan=18)
 filler_column_2 = tk.Label(root, text="", padx=5)
 filler_column_2.grid(column=4, row=0)
 
-btnSub = tk.Button(
-    root,
-    text="k-0.1",
-    command=sub_k,
-    font=12,
-    padx=30,
-)
-btnSub.grid(column=5, row=18)
+# btnSub = tk.Button(
+#     root,
+#     text="k-0.1",
+#     command=sub_k,
+#     font=12,
+#     padx=30,
+# )
+# btnSub.grid(column=5, row=18)
 
-# labelK = tk.Label(root, text=f"k = {objects[0].k}", font=('Arial Bold', font_size))
+# labelK = tk.Label(root, text="qwe", font=('Arial Bold', font_size))
 # labelK.grid(column=5, row=16)
 
-btnAdd = tk.Button(
-    root,
-    text="k+0.1",
-    command=add_k,
-    font=12,
-    padx=30,
-)
-btnAdd.grid(column=5, row=17)
+# btnAdd = tk.Button(
+#     root,
+#     text="k+0.1",
+#     command=add_k,
+#     font=12,
+#     padx=30,
+# )
+# btnAdd.grid(column=5, row=17)
 
 btnStart = tk.Button(
     root,
