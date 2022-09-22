@@ -34,7 +34,7 @@ gifs_counter = 0
 
 # objects = [sin1, sin2, sin3, sin4]
 victim = function.Victim(plt, ax, start_x=0, start_y=0, direction=30, speed=0.5, max_angle_of_rotation=10)
-hunter1 = function.Hunter(plt, ax, start_x=-4, start_y=2, direction=90, speed=0.7, max_angle_of_rotation=10)
+hunter1 = function.Hunter(plt, ax, start_x=-4, start_y=2, direction=90, speed=0.7, max_angle_of_rotation=10, angle_of_vision=30, len_of_vision=10)
 victim.add_hunter(hunter1)
 hunter1.set_victim(victim)
 objects = [victim, hunter1]
@@ -164,3 +164,9 @@ for item in objects:
 
 root.protocol("WM_DELETE_WINDOW", on_closing)
 root.mainloop()
+
+"""
+1. Конус слежения преследователя - догоняет жертву, пока видит
+2. Обратный конус слежения жертвы - убегает когда обнаружил погоню
+3. Маневр зайца
+"""
