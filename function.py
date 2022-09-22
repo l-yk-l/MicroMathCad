@@ -53,7 +53,7 @@ class Sinusoid(object):
 
 
 class Victim(object):
-    def __init__(self, plt, ax, start_x, start_y, direction, speed, max_angle_of_rotation, n_points=500):
+    def __init__(self, plt, ax, start_x, start_y, direction, speed, max_angle_of_rotation, angle_of_vision, len_of_vision, n_points=500):
         self.n_points = n_points
         self.e = 10 / n_points
         self.direction = direction
@@ -70,6 +70,17 @@ class Victim(object):
         self.ax = ax
         self.plt = plt
         [self.line] = self.ax.step(self.x, self.y)
+        self.vision_left_border_x = None
+        self.vision_left_border_y = None
+        self.vision_right_border_x = None
+        self.vision_right_border_y = None
+        self.angle_of_vision = angle_of_vision
+        self.len_of_vision = len_of_vision
+        [self.left_border] = self.ax.step(self.x, self.y)
+        [self.right_border] = self.ax.step(self.x, self.y)
+        self.left_border.set_color('green')
+        self.right_border.set_color('green')
+        self.draw_vision()
         self.color = None
 
         self.plt.xlim([self.x[-1]-10, self.x[-1]+10])
@@ -82,7 +93,7 @@ class Victim(object):
         # B = (x1 + d*cos(a), y1 + d*sin(a))
         if not self.isPaused:
             # Расчет угла поворота
-            if len(self.hunters):
+            if len(self.hunters) and self.view_hunter():
                 min_rotation = 181
                 current_hunter_x = None
                 current_hunter_y = None
@@ -124,6 +135,10 @@ class Victim(object):
 
             self.line.set_xdata(self.x)  # update plot data
             self.line.set_ydata(self.y)
+            self.draw_vision()
+
+            # print(self.direction, 180+self.direction, 180+self.direction - (self.angle_of_vision / 2),
+            #       180+self.direction + (self.angle_of_vision / 2))
 
             # лимиты осей (с какой по какую точку оси отображать плот)
             self.set_plt_lims()
@@ -132,6 +147,52 @@ class Victim(object):
             time.sleep(0.05)
 
             return self.line, self.ax
+
+    # Отрисовка конуса слежения
+    def draw_vision(self):
+        # Расчет координат точек конуса обзора
+        self.vision_left_border_x = self.x[-1] + self.len_of_vision * np.cos(
+            np.radians(180+self.direction - (self.angle_of_vision / 2)))
+        self.vision_left_border_y = self.y[-1] + self.len_of_vision * np.sin(
+            np.radians(180+self.direction - (self.angle_of_vision / 2)))
+        self.vision_right_border_x = self.x[-1] + self.len_of_vision * np.cos(
+            np.radians(180+self.direction + (self.angle_of_vision / 2)))
+        self.vision_right_border_y = self.y[-1] + self.len_of_vision * np.sin(
+            np.radians(180+self.direction + (self.angle_of_vision / 2)))
+
+        self.left_border.set_xdata(np.linspace(self.x[-1], self.vision_left_border_x, self.len_of_vision * 3))
+        self.left_border.set_ydata(np.linspace(self.y[-1], self.vision_left_border_y, self.len_of_vision * 3))
+        self.right_border.set_xdata(np.linspace(self.x[-1], self.vision_right_border_x, self.len_of_vision * 3))
+        self.right_border.set_ydata(np.linspace(self.y[-1], self.vision_right_border_y, self.len_of_vision * 3))
+
+    # return bool
+    # Видит ли жертва охотника
+    # 1, 2, 3 - вершины треугольника слежения; 0 - текущие корды жертвы
+    # t1 = (x1 - x0) * (y2 - y1) - (x2 - x1) * (y1 - y0)
+    # t2 = (x2 - x0) * (y3 - y2) - (x3 - x2) * (y2 - y0)
+    # t3 = (x3 - x0) * (y1 - y3) - (x1 - x3) * (y3 - y0)
+    # если sign(t1) == sign(t2) == sign(t3) - точка внутри треугольника
+    # если t1 == 0 or t2 == 0 or t3 == 0 - точка на границе треугольника
+    # иначе точка вне треугольника
+    def view_hunter(self):
+        for hunter in self.hunters:
+            x1 = self.x[-1]
+            y1 = self.y[-1]
+            x2 = self.vision_left_border_x
+            y2 = self.vision_left_border_y
+            x3 = self.vision_right_border_x
+            y3 = self.vision_right_border_y
+            x0 = hunter.x[-1]
+            y0 = hunter.y[-1]
+
+            t1 = np.sign((x1 - x0) * (y2 - y1) - (x2 - x1) * (y1 - y0))
+            t2 = np.sign((x2 - x0) * (y3 - y2) - (x3 - x2) * (y2 - y0))
+            t3 = np.sign((x3 - x0) * (y1 - y3) - (x1 - x3) * (y3 - y0))
+
+            if t1 * t2 * t3 == 0 or (t1 == t2 and t2 == t3):
+                return True
+
+        return False
 
     def set_plt_lims(self):
         min_x_lim = min(self.x)
