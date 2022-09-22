@@ -1,8 +1,13 @@
 import time
 import math
+import random
 
 import numpy as np
 from collections import deque
+
+
+def get_distance(x1, y1, x2, y2):
+    return math.sqrt((x1-x2)**2 + (y1-y2)**2)
 
 
 class Sinusoid(object):
@@ -119,11 +124,14 @@ class Victim(object):
                         min_rotation = angle_from_hunter
                         current_hunter_x = local_hunter_x
                         current_hunter_y = local_hunter_y
+
+                    was_rabbit_jump = self.rabbit_jump(hunter)
                 # print(min_rotation)
-                if current_hunter_y < 0:
-                    self.direction += min(self.max_angle_of_rotation, abs(min_rotation))
-                else:
-                    self.direction -= min(self.max_angle_of_rotation, abs(min_rotation))
+                if not was_rabbit_jump:
+                    if current_hunter_y < 0:
+                        self.direction += min(self.max_angle_of_rotation, abs(min_rotation))
+                    else:
+                        self.direction -= min(self.max_angle_of_rotation, abs(min_rotation))
 
             for i in range(10):
                 last_x = self.x[-1]
@@ -193,6 +201,17 @@ class Victim(object):
                 return True
 
         return False
+
+    def rabbit_jump(self, hunter):
+        distance = get_distance(self.x[-1], self.y[-1], hunter.x[-1], hunter.y[-1])
+        if distance < hunter.speed:
+            self.direction += (1 if random.random() < 0.5 else -1) * self.max_angle_of_rotation
+            return
+
+    def stop_all(self):
+        self.isPaused = True
+        for hunter in self.hunters:
+            hunter.isPaused = True
 
     def set_plt_lims(self):
         min_x_lim = min(self.x)
